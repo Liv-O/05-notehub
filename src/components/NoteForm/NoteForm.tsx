@@ -1,5 +1,12 @@
 import css from './NoteForm.module.css';
 import { ErrorMessage, Field, Form, Formik, type FormikHelpers } from 'formik';
+import * as Yup from 'yup';
+import type { NewNote } from '../../types/note';
+
+interface NoteFormProps {
+  closeModal: () => void;
+  newNoteCreate: (newNoteInfo: NewNote) => void;
+}
 
 interface NoteFormValues {
   title: string;
@@ -13,18 +20,35 @@ const initialValues: NoteFormValues = {
   tag: 'Todo',
 };
 
-function NoteForm() {
+const NoteFormValidation = Yup.object().shape({
+  title: Yup.string()
+    .min(3, 'Title must have minimum 3 symbols')
+    .max(50, 'Title must have maximum 50 symbols')
+    .required('Title is required'),
+  content: Yup.string().max(500, 'Content must have maximum 500 symbols'),
+  tag: Yup.string()
+    .oneOf(
+      ['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'],
+      'Wrong tag name '
+    )
+    .required('Tag is required'),
+});
+
+function NoteForm({ closeModal, newNoteCreate }: NoteFormProps) {
   const handleSubmit = (
     values: NoteFormValues,
     actions: FormikHelpers<NoteFormValues>
   ) => {
     actions.resetForm();
+    closeModal();
+    newNoteCreate(values);
   };
 
   return (
     <Formik
       initialValues={initialValues}
-      onSubmit={handleSubmit}>
+      onSubmit={handleSubmit}
+      validationSchema={NoteFormValidation}>
       <Form>
         <div className={css.formGroup}>
           <label htmlFor="title">Title</label>
@@ -80,7 +104,8 @@ function NoteForm() {
         <div className={css.actions}>
           <button
             type="button"
-            className={css.cancelButton}>
+            className={css.cancelButton}
+            onClick={closeModal}>
             Cancel
           </button>
 

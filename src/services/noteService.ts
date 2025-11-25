@@ -42,11 +42,11 @@ export const createNote = async (
     headers: {
       Authorization: `Bearer ${import.meta.env.VITE_NOTEHUB_TOKEN}`,
     },
-    body: note,
   };
 
   const newNote = await axios.post<HTTPPostDeleteResponse>(
     'https://notehub-public.goit.study/api/notes',
+    note,
     postParams
   );
 
@@ -60,13 +60,10 @@ export const deleteNote = async (
     headers: {
       Authorization: `Bearer ${import.meta.env.VITE_NOTEHUB_TOKEN}`,
     },
-    params: {
-      id,
-    },
   };
 
   const newNote = await axios.delete<HTTPPostDeleteResponse>(
-    'https://notehub-public.goit.study/api/notes',
+    `https://notehub-public.goit.study/api/notes/${id}`,
     deleteParams
   );
 

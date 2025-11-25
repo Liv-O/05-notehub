@@ -1,11 +1,13 @@
+// import type { deleteNote } from '../../services/noteService';
 import type { Note } from '../../types/note';
 import css from './NoteList.module.css';
 
 interface NoteListProps {
   notes: Note[];
+  deleteNote: (id: string) => void;
 }
 
-function NoteList({ notes }: NoteListProps) {
+function NoteList({ notes, deleteNote }: NoteListProps) {
   return (
     <ul className={css.list}>
       {notes.map((note) => (
@@ -16,7 +18,11 @@ function NoteList({ notes }: NoteListProps) {
           <p className={css.content}>{note.content}</p>
           <div className={css.footer}>
             <span className={css.tag}>{note.tag}</span>
-            <button className={css.button}>Delete</button>
+            <button
+              className={css.button}
+              onClick={() => deleteNote(note.id)}>
+              Delete
+            </button>
           </div>
         </li>
       ))}
