@@ -17,6 +17,8 @@ import Modal from '../Modal/Modal';
 import NoteForm from '../NoteForm/NoteForm';
 import type { NewNote } from '../../types/note';
 import SearchBox from '../SearchBox/SearchBox';
+import Loader from '../Loader/Loader';
+import Error from '../Error/Error';
 
 function App() {
   const [title, setTitle] = useState<string>('');
@@ -96,6 +98,12 @@ function App() {
           Create note +
         </button>
       </header>
+      {isLoading && <Loader />}
+      {mutationPost.isPending && <Loader />}
+      {mutationDelete.isPending && <Loader />}
+      {isError && <Error />}
+      {mutationPost.isError && <Error />}
+      {mutationDelete.isError && <Error />}
       {isOpenModal && (
         <Modal closeModal={closeModal}>
           <NoteForm
