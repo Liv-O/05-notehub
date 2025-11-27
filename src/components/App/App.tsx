@@ -9,7 +9,7 @@ import {
 import css from './App.module.css';
 import { createNote, deleteNote, fetchNotes } from '../../services/noteService';
 import { useState } from 'react';
-import { useDebounce } from 'use-debounce';
+import { useDebouncedCallback } from 'use-debounce';
 import NoteList from '../NoteList/NoteList';
 
 import Pagination from '../Pagination/Pagination';
@@ -25,13 +25,16 @@ function App() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
 
-  const [debouncedSearch] = useDebounce(title, 1000);
+  const debouncedSearch = useDebouncedCallback((value: string) => {
+    setTitle(value);
+    setCurrentPage(1);
+  }, 1000);
 
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, isSuccess } = useQuery({
-    queryKey: ['notes', debouncedSearch, currentPage],
-    queryFn: () => fetchNotes(currentPage, debouncedSearch),
+    queryKey: ['notes', title, currentPage],
+    queryFn: () => fetchNotes(currentPage, title),
     enabled: true,
     placeholderData: keepPreviousData,
   });
@@ -69,19 +72,23 @@ function App() {
     setIsOpenModal(false);
   };
 
-  const newNoteCreate = (newNoteCreatedInfo: NewNote) => {
-    mutationPost.mutate(newNoteCreatedInfo);
-  };
+  // const newNoteCreate = (newNoteCreatedInfo: NewNote) => {
+  //   return mutationPost.mutate(newNoteCreatedInfo);
+  // };
 
-  const deleteNoteClick = (id: string) => {
-    mutationDelete.mutate(id);
-  };
+  const newNoteCreate = mutationPost.mutateAsync;
+
+  // const deleteNoteClick = (id: string) => {
+  //   mutationDelete.mutate(id);
+  // };
+
+  const deleteNoteClick = mutationDelete.mutateAsync;
 
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
         <SearchBox
-          onSearch={setTitle}
+          onSearch={debouncedSearch}
           value={title}
         />
         {isSuccess && totalPages > 1 && (

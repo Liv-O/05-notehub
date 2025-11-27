@@ -1,11 +1,11 @@
 import css from './NoteForm.module.css';
 import { ErrorMessage, Field, Form, Formik, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
-import type { NewNote } from '../../types/note';
+import type { NewNote, Note } from '../../types/note';
 
 interface NoteFormProps {
   closeModal: () => void;
-  newNoteCreate: (newNoteInfo: NewNote) => void;
+  newNoteCreate: (newNoteInfo: NewNote) => Promise<Note>;
 }
 
 interface NoteFormValues {
@@ -35,13 +35,18 @@ const NoteFormValidation = Yup.object().shape({
 });
 
 function NoteForm({ closeModal, newNoteCreate }: NoteFormProps) {
-  const handleSubmit = (
+  const handleSubmit = async (
     values: NoteFormValues,
     actions: FormikHelpers<NoteFormValues>
   ) => {
-    actions.resetForm();
-    closeModal();
-    newNoteCreate(values);
+    try {
+      await newNoteCreate(values); // чекаємо mutateAsync
+
+      actions.resetForm();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    }
   };
 
   return (

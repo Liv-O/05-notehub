@@ -7,17 +7,17 @@ interface HTTPGetResponse {
   totalPages: number;
 }
 
-interface HTTPPostDeleteResponse {
-  note: Note;
-}
+// interface HTTPPostDeleteResponse {
+//   data: Note;
+// }
 
 export const fetchNotes = async (
   currentPage: number,
-  title: string
+  search: string
 ): Promise<HTTPGetResponse> => {
   const getParams = {
     params: {
-      search: title,
+      search,
       page: currentPage,
       perPage: 12,
     },
@@ -30,42 +30,36 @@ export const fetchNotes = async (
     'https://notehub-public.goit.study/api/notes',
     getParams
   );
-  console.log(data);
 
   return data.data;
 };
 
-export const createNote = async (
-  note: NewNote
-): Promise<HTTPPostDeleteResponse> => {
+export const createNote = async (note: NewNote): Promise<Note> => {
   const postParams = {
     headers: {
       Authorization: `Bearer ${import.meta.env.VITE_NOTEHUB_TOKEN}`,
     },
   };
 
-  const newNote = await axios.post<HTTPPostDeleteResponse>(
+  const { data } = await axios.post<Note>(
     'https://notehub-public.goit.study/api/notes',
     note,
     postParams
   );
 
-  return newNote.data;
+  return data;
 };
 
-export const deleteNote = async (
-  id: string
-): Promise<HTTPPostDeleteResponse> => {
+export const deleteNote = async (id: string): Promise<Note> => {
   const deleteParams = {
     headers: {
       Authorization: `Bearer ${import.meta.env.VITE_NOTEHUB_TOKEN}`,
     },
   };
 
-  const newNote = await axios.delete<HTTPPostDeleteResponse>(
+  const { data } = await axios.delete<Note>(
     `https://notehub-public.goit.study/api/notes/${id}`,
     deleteParams
   );
-
-  return newNote.data;
+  return data;
 };
