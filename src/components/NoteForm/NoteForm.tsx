@@ -1,11 +1,14 @@
 import css from './NoteForm.module.css';
 import { ErrorMessage, Field, Form, Formik, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
-import type { NewNote, Note } from '../../types/note';
+import type { NewNote } from '../../types/note';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createNote } from '../../services/noteService';
+import Loader from '../Loader/Loader';
+import CustomErrorMessage from '../CustomErrorMessage/CustomErrorMessage';
 
 interface NoteFormProps {
   closeModal: () => void;
-  newNoteCreate: (newNoteInfo: NewNote) => Promise<Note>;
 }
 
 interface NoteFormValues {
@@ -34,94 +37,121 @@ const NoteFormValidation = Yup.object().shape({
     .required('Tag is required'),
 });
 
-function NoteForm({ closeModal, newNoteCreate }: NoteFormProps) {
+function NoteForm({ closeModal }: NoteFormProps) {
+  const queryClient = useQueryClient();
+
+  const mutationPost = useMutation({
+    mutationFn: async (newNoteInfo: NewNote) => {
+      return createNote(newNoteInfo);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['notes'],
+      });
+    },
+  });
+
   const handleSubmit = async (
     values: NoteFormValues,
     actions: FormikHelpers<NoteFormValues>
   ) => {
     try {
-      await newNoteCreate(values); // чекаємо mutateAsync
+      await mutationPost.mutateAsync(values); // <-- чекаємо реальний API виклик
 
       actions.resetForm();
       closeModal();
     } catch (error) {
       console.error('Failed to create note:', error);
     }
+
+    // try {
+    //   await newNoteCreate(values); // чекаємо mutateAsync
+
+    //   actions.resetForm();
+    //   closeModal();
+    // } catch (error) {
+    //   console.error('Failed to create note:', error);
+    // }
   };
 
   return (
-    <Formik
-      initialValues={initialValues}
-      onSubmit={handleSubmit}
-      validationSchema={NoteFormValidation}>
-      <Form>
-        <div className={css.formGroup}>
-          <label htmlFor="title">Title</label>
-          <Field
-            id="title"
-            type="text"
-            name="title"
-            className={css.input}
-          />
-          <ErrorMessage
-            name="title"
-            component="span"
-            className={css.error}
-          />
-        </div>
+    <>
+      {mutationPost.isPending && <Loader />}
+      {mutationPost.isError && <CustomErrorMessage />}
+      <Formik
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
+        validationSchema={NoteFormValidation}>
+        <Form>
+          <div className={css.formGroup}>
+            <label htmlFor="title">Title</label>
+            <Field
+              id="title"
+              type="text"
+              name="title"
+              className={css.input}
+            />
+            <ErrorMessage
+              name="title"
+              component="span"
+              className={css.error}
+            />
+          </div>
 
-        <div className={css.formGroup}>
-          <label htmlFor="content">Content</label>
-          <Field
-            id="content"
-            as="textarea"
-            name="content"
-            rows={8}
-            className={css.textarea}
-          />
-          <ErrorMessage
-            name="content"
-            component="span"
-            className={css.error}
-          />
-        </div>
+          <div className={css.formGroup}>
+            <label htmlFor="content">Content</label>
+            <Field
+              id="content"
+              as="textarea"
+              name="content"
+              rows={8}
+              className={css.textarea}
+            />
+            <ErrorMessage
+              name="content"
+              component="span"
+              className={css.error}
+            />
+          </div>
 
-        <div className={css.formGroup}>
-          <label htmlFor="tag">Tag</label>
-          <Field
-            id="tag"
-            as="select"
-            name="tag"
-            className={css.select}>
-            <option value="Todo">Todo</option>
-            <option value="Work">Work</option>
-            <option value="Personal">Personal</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Shopping">Shopping</option>
-          </Field>
-          <ErrorMessage
-            name="tag"
-            component="span"
-            className={css.error}
-          />
-        </div>
+          <div className={css.formGroup}>
+            <label htmlFor="tag">Tag</label>
+            <Field
+              id="tag"
+              as="select"
+              name="tag"
+              className={css.select}>
+              <option value="Todo">Todo</option>
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Shopping">Shopping</option>
+            </Field>
+            <ErrorMessage
+              name="tag"
+              component="span"
+              className={css.error}
+            />
+          </div>
 
-        <div className={css.actions}>
-          <button
-            type="button"
-            className={css.cancelButton}
-            onClick={closeModal}>
-            Cancel
-          </button>
+          <div className={css.actions}>
+            <button
+              type="button"
+              className={css.cancelButton}
+              onClick={closeModal}>
+              Cancel
+            </button>
 
-          <button
-            type="submit"
-            className={css.submitButton}>
-            Create note
-          </button>
-        </div>
-      </Form>
-    </Formik>
+            <button
+              type="submit"
+              className={css.submitButton}
+              disabled={mutationPost.isPending}>
+              Create note
+            </button>
+          </div>
+        </Form>
+      </Formik>
+    </>
   );
 }
 

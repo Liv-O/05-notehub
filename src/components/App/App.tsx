@@ -1,13 +1,8 @@
 //import { useState } from 'react';
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import css from './App.module.css';
-import { createNote, deleteNote, fetchNotes } from '../../services/noteService';
+import { fetchNotes } from '../../services/noteService';
 import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import NoteList from '../NoteList/NoteList';
@@ -15,10 +10,9 @@ import NoteList from '../NoteList/NoteList';
 import Pagination from '../Pagination/Pagination';
 import Modal from '../Modal/Modal';
 import NoteForm from '../NoteForm/NoteForm';
-import type { NewNote } from '../../types/note';
 import SearchBox from '../SearchBox/SearchBox';
 import Loader from '../Loader/Loader';
-import Error from '../Error/Error';
+import CustomErrorMessage from '../CustomErrorMessage/CustomErrorMessage';
 
 function App() {
   const [title, setTitle] = useState<string>('');
@@ -30,8 +24,6 @@ function App() {
     setCurrentPage(1);
   }, 1000);
 
-  const queryClient = useQueryClient();
-
   const { data, isLoading, isError, isSuccess } = useQuery({
     queryKey: ['notes', title, currentPage],
     queryFn: () => fetchNotes(currentPage, title),
@@ -39,28 +31,28 @@ function App() {
     placeholderData: keepPreviousData,
   });
 
-  const mutationPost = useMutation({
-    mutationFn: async (newNoteInfo: NewNote) => {
-      return createNote(newNoteInfo);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['notes'],
-      });
-    },
-  });
+  // const mutationPost = useMutation({
+  //   mutationFn: async (newNoteInfo: NewNote) => {
+  //     return createNote(newNoteInfo);
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({
+  //       queryKey: ['notes'],
+  //     });
+  //   },
+  // });
 
-  const mutationDelete = useMutation({
-    mutationFn: async (id: string) => {
-      return deleteNote(id);
-    },
-    onSuccess: () => {
-      console.log('note deleted');
-      queryClient.invalidateQueries({
-        queryKey: ['notes'],
-      });
-    },
-  });
+  // const mutationDelete = useMutation({
+  //   mutationFn: async (id: string) => {
+  //     return deleteNote(id);
+  //   },
+  //   onSuccess: () => {
+  //     console.log('note deleted');
+  //     queryClient.invalidateQueries({
+  //       queryKey: ['notes'],
+  //     });
+  //   },
+  // });
 
   const totalPages = data?.totalPages ?? 0;
 
@@ -76,13 +68,13 @@ function App() {
   //   return mutationPost.mutate(newNoteCreatedInfo);
   // };
 
-  const newNoteCreate = mutationPost.mutateAsync;
+  // const newNoteCreate = mutationPost.mutateAsync;
 
   // const deleteNoteClick = (id: string) => {
   //   mutationDelete.mutate(id);
   // };
 
-  const deleteNoteClick = mutationDelete.mutateAsync;
+  // const deleteNoteClick = mutationDelete.mutateAsync;
 
   return (
     <div className={css.app}>
@@ -106,25 +98,17 @@ function App() {
         </button>
       </header>
       {isLoading && <Loader />}
-      {mutationPost.isPending && <Loader />}
-      {mutationDelete.isPending && <Loader />}
-      {isError && <Error />}
-      {mutationPost.isError && <Error />}
-      {mutationDelete.isError && <Error />}
+      {/* {mutationPost.isPending && <Loader />}
+      {mutationDelete.isPending && <Loader />} */}
+      {isError && <CustomErrorMessage />}
+      {/* {mutationPost.isError && <Error />}
+      {mutationDelete.isError && <Error />} */}
       {isOpenModal && (
         <Modal closeModal={closeModal}>
-          <NoteForm
-            closeModal={closeModal}
-            newNoteCreate={newNoteCreate}
-          />
+          <NoteForm closeModal={closeModal} />
         </Modal>
       )}
-      {data && data.notes.length > 0 && (
-        <NoteList
-          notes={data.notes}
-          deleteNote={deleteNoteClick}
-        />
-      )}
+      {data && data.notes.length > 0 && <NoteList notes={data.notes} />}
     </div>
   );
 }
