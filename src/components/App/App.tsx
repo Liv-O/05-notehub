@@ -24,7 +24,7 @@ function App() {
     setCurrentPage(1);
   }, 1000);
 
-  const { data, isLoading, isError, isSuccess } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', title, currentPage],
     queryFn: () => fetchNotes(currentPage, title),
     enabled: true,
@@ -83,7 +83,7 @@ function App() {
           onSearch={debouncedSearch}
           value={title}
         />
-        {isSuccess && totalPages > 1 && (
+        {totalPages > 1 && (
           <Pagination
             totalPages={totalPages}
             currentPage={currentPage}
